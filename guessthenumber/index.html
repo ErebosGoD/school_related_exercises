@@ -13,14 +13,19 @@
 
 <body>
     <div id="headline">
-        <header>Create an account</header>
+        <header>Welcome to Guess The Number</header>
     </div>
     <div id="loginForm">
         <form action="/login" method="post">
             <label for="username">Username:</label>
-            <input type="text" id="username" name="username"><br>
-            <input type="submit" value="Submit">
+            <input type="text" id="username" name="username" required><br>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required><br>
+            <input type="submit" value="Login">
         </form>
+    </div>
+    <div class="button-container">
+        <a href="/register" class="btn btn-primary">Register</a>
     </div>
     <script src="" async defer></script>
 </body>

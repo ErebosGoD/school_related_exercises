@@ -1,4 +1,5 @@
 import sqlite3
+from werkzeug.security import generate_password_hash
 
 
 class UserManager:
@@ -14,7 +15,8 @@ class UserManager:
         with self.connection:
             self.connection.execute(''' CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE
+                username TEXT UNIQUE,
+                password TEXT
                 )''')
 
             self.connection.execute(''' CREATE TABLE IF NOT EXISTS scores (
@@ -22,7 +24,7 @@ class UserManager:
                 score INTEGER 
                 )''')
 
-    def create_user(self, username):
+    def create_user(self, username, password):
         with self.connection:
             cursor = self.connection.execute('''
                 SELECT username
@@ -33,10 +35,11 @@ class UserManager:
             existing_user = cursor.fetchone()
 
             if existing_user:
-                raise ValueError("User already exists")
+                raise ValueError("Benutzername bereits vorhanden")
 
+            hashed_password = generate_password_hash(password, method='scrypt')
             self.connection.execute(
-                ''' INSERT INTO users (username) VALUES (?)''', (username,))
+                '''INSERT INTO users (username, password) VALUES (?, ?)''', (username, hashed_password))
 
             self.connection.execute('''
                 INSERT INTO scores (username, score)
@@ -50,6 +53,23 @@ class UserManager:
                 SET score = ?
                 WHERE username = ?
             ''', (score, username))
+
+    def get_user(self, username):
+        with self.connection:
+            cursor = self.connection.execute('''
+                SELECT username, password
+                FROM users
+                WHERE username = ?
+            ''', (username,))
+
+            row = cursor.fetchone()
+            if row:
+                user = {
+                    'username': row[0],
+                    'password': row[1]
+                }
+                return user
+            return None
 
     def get_score(self, username):
         with self.connection:
