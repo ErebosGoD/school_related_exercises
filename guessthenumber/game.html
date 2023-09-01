@@ -12,7 +12,17 @@
 
 <body>
     <!-- Hier können Sie den Inhalt Ihrer Spieloberfläche einfügen -->
-    <h1>Willkommen im Spiel!</h1>
+    <h1>Willkommen im Spiel {{ username }}!</h1>
+    <form action="/check-guess" method="post">
+        <label for="guess">Gib eine Zahl ein (1-100):</label>
+        <input type="number" id="guess" name="guess" min="1" max="100" required>
+        <input type="hidden" name="random_number" value="{{ random_number }}">
+        <input type="submit" value="Überprüfen">
+    </form>
+    <script>
+        var username = "{{ username }}";
+        localStorage.setItem('username', username)
+    </script>
 </body>
 
 </html>
