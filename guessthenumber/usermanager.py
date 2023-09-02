@@ -46,13 +46,23 @@ class UserManager:
                 VALUES (?, ?)
             ''', (username, 1000))
 
-    def update_score(self, score, username):
+    def update_score(self, new_score, username):
         with self.connection:
-            self.connection.execute('''
-                UPDATE scores
-                SET score = ?
+            # Holen Sie sich den aktuellen Score aus der Datenbank
+            cursor = self.connection.execute('''
+                SELECT score
+                FROM scores
                 WHERE username = ?
-            ''', (score, username))
+            ''', (username,))
+            current_score = cursor.fetchone()
+
+            # Wenn es keinen aktuellen Score gibt oder der neue Score höher ist, aktualisieren Sie ihn
+            if not current_score or new_score > current_score[0]:
+                self.connection.execute('''
+                    UPDATE scores
+                    SET score = ?
+                    WHERE username = ?
+                ''', (new_score, username))
 
     def get_user(self, username):
         with self.connection:

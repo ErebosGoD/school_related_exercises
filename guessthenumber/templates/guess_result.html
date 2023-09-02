@@ -11,10 +11,20 @@
 </head>
 
 <body>
-    <h1>Ergebnis</h1>
+    <div>
+        <h1>Congratulations</h1>
+    </div>
 
-    <p>Die zufällige Zahl war: {{ random_number }}</p>
-    <p>Dein Score: {{ score }}</p>
+    <div>
+        <p>Your random number was: {{ random_number }}</p>
+    </div>
+    <div>
+        <p>Your Highscore: {{ score }}</p>
+    </div>
+    <form action="/logout" method="post">
+        <input type="submit" value="Logout">
+    </form>
+
 
 </body>
 

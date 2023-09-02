@@ -1,10 +1,11 @@
 import os
 import random
-from flask import Flask, request, render_template, redirect, url_for, session
+from functools import wraps
+from flask import Flask, request, render_template, redirect, url_for, flash, session
 from werkzeug.security import check_password_hash
 from usermanager import UserManager
 
-app = Flask(__name__, template_folder='.')
+app = Flask(__name__, template_folder='templates')
 app.secret_key = os.urandom(24).hex()  # Zufälliger Sitzungsschlüssel
 
 
@@ -12,6 +13,24 @@ app.secret_key = os.urandom(24).hex()  # Zufälliger Sitzungsschlüssel
 users = {}
 attempts = {}
 scores = {}
+
+
+def is_user_authenticated():
+    return 'username' in session
+
+
+def has_permission(username):
+    return session.get('username') == username
+
+
+def login_required(view_function):
+    @wraps(view_function)
+    def decorated_view(*args, **kwargs):
+        if not is_user_authenticated() or not has_permission(session.get('username')):
+            flash('You need to log in first', 'User not logged in')
+            return redirect(url_for('index'))
+        return view_function(*args, **kwargs)
+    return decorated_view
 
 
 def generate_random_key(length=24):
@@ -62,6 +81,7 @@ def login():
 
 
 @app.route('/game/<name>', methods=['GET', 'POST'])
+@login_required
 def game(name):
     username = session.get('username')
     random_number = session.get('random_number')
@@ -91,11 +111,18 @@ def game(name):
 
 
 @app.route('/guess_result/<name>')
+@login_required
 def guess_result(name):
     random_number = session.get('random_number')
     score = scores.get(name, 0)
 
     return render_template('guess_result.html', username=name, random_number=random_number, score=score)
+
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('index'))
 
 
 def check_guess_result(random_number, guess):
