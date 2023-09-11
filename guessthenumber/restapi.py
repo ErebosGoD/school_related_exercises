@@ -41,7 +41,7 @@ def generate_random_key(length=24):
     return key.hex()
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
     return render_template('index.html')
 
@@ -61,7 +61,7 @@ def register():
     return render_template('register.html')
 
 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['POST', 'GET'])
 def login():
     session.clear()
     username = request.form.get('username')
