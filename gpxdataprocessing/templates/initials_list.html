@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Initials List</title>
+</head>
+
+<body>
+    <h1>Initials List</h1>
+    <ul>
+        {% for initials in initials_list %}
+        <li><a href="{{ url_for('list_tracks', initials=initials) }}">{{ initials }}</a></li>
+        {% endfor %}
+    </ul>
+</body>
+
+</html>

@@ -73,18 +73,18 @@ def persist_gpx_data(cursor):
                 # if true use existing driver ID
                 driver_id = existing_driver[0]
             else:
-                # if falls insert as new driver with new ID
-                cursor.execute('INSERT INTO drivers (initials) VALUES (?)',
-                               (initials,))
+                # if false, insert as a new driver with a new ID
+                cursor.execute(
+                    'INSERT INTO drivers (initials) VALUES (?)', (initials,))
                 driver_id = cursor.lastrowid
 
             # insert license plates
-            cursor.execute('INSERT INTO cars (license_plate) VALUES (?)',
-                           (license_plate,))
+            cursor.execute(
+                'INSERT INTO cars (license_plate) VALUES (?)', (license_plate,))
 
             # insert tracks
-            cursor.execute('INSERT INTO tracks (driver_id, car_id) VALUES ((SELECT driver_id FROM drivers WHERE initials = ?), (SELECT car_id FROM cars WHERE license_plate = ?))',
-                           (initials, license_plate))
+            cursor.execute('INSERT INTO tracks (driver_id, car_id) VALUES (?, (SELECT car_id FROM cars WHERE license_plate = ?))',
+                           (driver_id, license_plate))
 
             track_id = cursor.lastrowid
 
