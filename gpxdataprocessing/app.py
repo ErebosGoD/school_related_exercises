@@ -1,7 +1,8 @@
-from flask import Flask, render_template, redirect, url_for
+from flask import Flask, render_template, redirect, url_for, flash, request
 from flask_caching import Cache
 import sqlite3
 import folium
+from parse_and_persist_data import GpxParser
 
 app = Flask(__name__)
 
@@ -9,24 +10,45 @@ app = Flask(__name__)
 app.config['CACHE_TYPE'] = 'simple'
 cache = Cache(app)
 
-# Konfigurieren Sie Ihre SQLite-Datenbankverbindung hier
 DATABASE = 'gpxdataprocessing\gpxdata.db'
+GPX_DIRECTORY = 'gpxdataprocessing\gpxdata'
 
 
 @app.route('/')
-def list_initials():
+def show_input_form():
+    gpx_parser.persist_gpx_data(GPX_DIRECTORY)
+    return render_template('index.html')
+
+
+@app.route('/process_name', methods=['POST'])
+def process_name():
+    first_name = request.form['first_name']
+    last_name = request.form['last_name']
+
+    # Extrahieren Sie den ersten Buchstaben von Vorname und Nachname
+    first_initial = first_name[0] if first_name else ''
+    last_initial = last_name[0] if last_name else ''
+    initials = first_initial + last_initial
+
     # Verbindung zur SQLite-Datenbank herstellen
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
-    # Initialen aus der Datenbank abrufen
-    cursor.execute('SELECT DISTINCT initials FROM drivers')
-    initials_list = [row[0] for row in cursor.fetchall()]
+    # Überprüfen, ob die Initialen in der Datenbank existieren
+    cursor.execute('SELECT driver_id FROM drivers WHERE initials = ?',
+                   (initials,))
+    driver = cursor.fetchone()
 
-    # Verbindung zur Datenbank schließen
-    conn.close()
-
-    return render_template('initials_list.html', initials_list=initials_list)
+    if driver:
+        # Wenn die Initialen existieren, die Liste der Tracks anzeigen
+        cursor.execute('''
+            SELECT track_id FROM tracks
+            WHERE driver_id = ?
+        ''', (driver[0],))
+        track_ids = [row[0] for row in cursor.fetchall()]
+        return render_template('track_list.html', initials=first_initial + last_initial, track_ids=track_ids)
+    else:
+        return redirect(url_for('show_input_form'))
 
 
 @app.route('/tracks/<initials>')
@@ -97,4 +119,5 @@ def display_track(track_id):
 
 
 if __name__ == '__main__':
+    gpx_parser = GpxParser(DATABASE)
     app.run(debug=True)
