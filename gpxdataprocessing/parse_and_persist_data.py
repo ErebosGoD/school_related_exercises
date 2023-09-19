@@ -88,6 +88,7 @@ def persist_gpx_data(cursor):
 
             track_id = cursor.lastrowid
 
+            # TODO GPX files with wpt instead of trkpt
             # insert waypoints
             for track in gpx.tracks:
                 for segment in track.segments:
