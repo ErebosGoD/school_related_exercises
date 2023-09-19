@@ -26,6 +26,13 @@ def display_first_track_on_map(driver_initials):
         m = folium.Map(location=[waypoints[0][0],
                        waypoints[0][1]], zoom_start=14)
 
+        # Linie zwischen den Wegpunkten zeichnen
+        polyline = folium.PolyLine(
+            locations=waypoints,
+            color='blue',  # Farbe der Linie
+            weight=3,       # Dicke der Linie
+        ).add_to(m)
+
         # Wegpunkte zur Karte hinzufügen
         for waypoint in waypoints:
             folium.Marker(
@@ -33,14 +40,13 @@ def display_first_track_on_map(driver_initials):
                 icon=None  # Sie können ein benutzerdefiniertes Icon hinzufügen
             ).add_to(m)
 
-        # Karte anzeigen
+        # Karte in HTML speichern
         m.save(r'gpxdataprocessing\templates\track_map.html')
     else:
-        print("Keine Daten für den angegebenen Fahrer gefunden oder der Fahrer hat keinen Track.")
+        return "Keine Daten für den ausgewählten Track gefunden."
 
     # Verbindung zur Datenbank schließen
     conn.close()
 
 
-# Beispielaufruf
 display_first_track_on_map('AA')

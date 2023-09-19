@@ -62,7 +62,7 @@ def display_track(track_id):
     # Wegpunkte für den ausgewählten Track abrufen
     cursor.execute('''
         SELECT latitude, longitude FROM waypoints
-        WHERE track_id = ? AND waypoint_id % 10 = 0
+        WHERE track_id = ?
     ''', (track_id,))
 
     waypoints = cursor.fetchall()
@@ -72,12 +72,18 @@ def display_track(track_id):
         m = folium.Map(location=[waypoints[0][0],
                        waypoints[0][1]], zoom_start=14)
 
+        folium.PolyLine(
+            locations=waypoints,
+            color='blue',  # Farbe der Linie
+            weight=3,       # Dicke der Linie
+        ).add_to(m)
+
         # Wegpunkte zur Karte hinzufügen
-        for waypoint in waypoints:
-            folium.Marker(
-                location=[waypoint[0], waypoint[1]],
-                icon=None  # Sie können ein benutzerdefiniertes Icon hinzufügen
-            ).add_to(m)
+        # for waypoint in waypoints:
+        #    folium.Marker(
+        #        location=[waypoint[0], waypoint[1]],
+        #        icon=None  # Sie können ein benutzerdefiniertes Icon hinzufügen
+        #    ).add_to(m)
 
         # Karte in HTML speichern
         m.save(r'gpxdataprocessing\templates\track_map.html')
