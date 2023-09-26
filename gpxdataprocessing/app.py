@@ -1,70 +1,52 @@
-from flask import Flask, render_template, redirect, url_for, flash, request
-from flask_caching import Cache
+from flask import Flask, render_template, jsonify
 import sqlite3
 import folium
 from parse_and_persist_data import GpxParser
 
 app = Flask(__name__)
 
-# Flask-Caching-Konfiguration
-app.config['CACHE_TYPE'] = 'simple'
-cache = Cache(app)
-
 DATABASE = 'gpxdataprocessing\gpxdata.db'
 GPX_DIRECTORY = 'gpxdataprocessing\gpxdata'
 
 
-@app.route('/')
-def show_input_form():
-    gpx_parser.persist_gpx_data(GPX_DIRECTORY)
-    return render_template('index.html')
+@app.route('/', methods=['GET'])
+def onepager():
+    return render_template('onepager.html')
+
+# Neue Route zum Abrufen aller Initialen als JSON
 
 
-@app.route('/process_name', methods=['POST'])
-def process_name():
-    first_name = request.form['first_name']
-    last_name = request.form['last_name']
-
-    # Extrahieren Sie den ersten Buchstaben von Vorname und Nachname
-    first_initial = first_name[0] if first_name else ''
-    last_initial = last_name[0] if last_name else ''
-    initials = first_initial + last_initial
-
+@app.route('/get_initials', methods=['GET'])
+def get_initials():
     # Verbindung zur SQLite-Datenbank herstellen
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
-    # Überprüfen, ob die Initialen in der Datenbank existieren
-    cursor.execute('SELECT driver_id FROM drivers WHERE initials = ?',
-                   (initials,))
-    driver = cursor.fetchone()
+    # Abrufen der Initialen aus der Datenbank
+    cursor.execute('SELECT DISTINCT initials FROM drivers')
+    initials = [row[0] for row in cursor.fetchall()]
 
-    if driver:
-        # Wenn die Initialen existieren, die Liste der Tracks anzeigen
-        cursor.execute('''
-            SELECT track_id FROM tracks
-            WHERE driver_id = ?
-        ''', (driver[0],))
-        track_ids = [row[0] for row in cursor.fetchall()]
-        return render_template('track_list.html', initials=first_initial + last_initial, track_ids=track_ids)
-    else:
-        return redirect(url_for('show_input_form'))
+    # Verbindung zur Datenbank schließen
+    conn.close()
+
+    # Konvertieren Sie die Initialen in JSON und senden Sie sie zurück
+    return jsonify(initials)
+
+# Neue Route zum Abrufen der Tracks basierend auf den ausgewählten Initialen als JSON
 
 
-@app.route('/tracks/<initials>')
-@cache.cached(timeout=3600)
-def list_tracks(initials):
+@app.route('/get_tracks/<initials>', methods=['GET'])
+def get_tracks(initials):
     # Verbindung zur SQLite-Datenbank herstellen
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
     # Tracks für die ausgewählten Initialen abrufen
     cursor.execute('''
-        SELECT track_id FROM tracks
-        WHERE driver_id = (
-            SELECT driver_id FROM drivers
-            WHERE initials = ?
-        )
+        SELECT tracks.track_id
+        FROM tracks
+        INNER JOIN drivers ON tracks.driver_id = drivers.driver_id
+        WHERE drivers.initials = ?
     ''', (initials,))
 
     track_ids = [row[0] for row in cursor.fetchall()]
@@ -72,10 +54,13 @@ def list_tracks(initials):
     # Verbindung zur Datenbank schließen
     conn.close()
 
-    return render_template('track_list.html', initials=initials, track_ids=track_ids)
+    # Konvertieren Sie die Track-IDs in JSON und senden Sie sie zurück
+    return jsonify(track_ids)
+
+# Neue Route zum Anzeigen eines Tracks basierend auf der ausgewählten Track-ID
 
 
-@app.route('/track/<int:track_id>')
+@app.route('/display_track/<int:track_id>', methods=['GET'])
 def display_track(track_id):
     # Verbindung zur SQLite-Datenbank herstellen
     conn = sqlite3.connect(DATABASE)
@@ -83,41 +68,41 @@ def display_track(track_id):
 
     # Wegpunkte für den ausgewählten Track abrufen
     cursor.execute('''
-        SELECT latitude, longitude FROM waypoints
+        SELECT latitude, longitude
+        FROM waypoints
         WHERE track_id = ?
     ''', (track_id,))
 
     waypoints = cursor.fetchall()
 
-    if waypoints:
-        # Karte erstellen
-        m = folium.Map(location=[waypoints[0][0],
-                       waypoints[0][1]], zoom_start=14)
+    # Karte erstellen
+    # Leere Karte mit Mittelpunkt Deutschland
+    m = folium.Map(location=[51.1657, 10.4515], zoom_start=6)
 
+    if waypoints:
         folium.PolyLine(
             locations=waypoints,
-            color='blue',  # Farbe der Linie
-            weight=3,       # Dicke der Linie
+            color='blue',
+            weight=3,
         ).add_to(m)
 
-        # Wegpunkte zur Karte hinzufügen
-        # for waypoint in waypoints:
-        #    folium.Marker(
-        #        location=[waypoint[0], waypoint[1]],
-        #        icon=None  # Sie können ein benutzerdefiniertes Icon hinzufügen
-        #    ).add_to(m)
+        # Berechnen Sie die Grenzen der Karte basierend auf den Wegpunkten
+        latitudes = [wp[0] for wp in waypoints]
+        longitudes = [wp[1] for wp in waypoints]
+        min_lat, max_lat = min(latitudes), max(latitudes)
+        min_lon, max_lon = min(longitudes), max(longitudes)
+        bounds = [[min_lat, min_lon], [max_lat, max_lon]]
 
-        # Karte in HTML speichern
-        m.save(r'gpxdataprocessing\templates\track_map.html')
-    else:
-        return "Keine Daten für den ausgewählten Track gefunden."
+        # Verwenden Sie die Grenzen, um die Karte anzupassen
+        m.fit_bounds(bounds)
 
-    # Verbindung zur Datenbank schließen
-    conn.close()
-
-    return render_template('track_map.html')
+    # Karte in HTML speichern und zurückgeben
+    map_html = m.get_root().render()
+    return map_html
 
 
 if __name__ == '__main__':
     gpx_parser = GpxParser(DATABASE)
+    gpx_parser.create_tables()
+    gpx_parser.persist_gpx_data(GPX_DIRECTORY)
     app.run(debug=True)
