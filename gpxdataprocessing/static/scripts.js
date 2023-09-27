@@ -1,10 +1,25 @@
-// scripts.js
-
-// JavaScript, um zwischen Dark Mode und Standardmodus umzuschalten
-function toggleDarkMode() {
+// Funktion zum Aktivieren des Dark Mode
+function enableDarkMode() {
     const body = document.querySelector('body');
-    body.classList.toggle('dark-mode');
+    body.classList.add('dark-mode');
 }
+
+// Funktion zum Deaktivieren des Dark Mode
+function disableDarkMode() {
+    const body = document.querySelector('body');
+    body.classList.remove('dark-mode');
+}
+
+// Event-Handler für den Dark Mode-Button
+const darkModeToggle = document.querySelector('#dark-mode-toggle');
+darkModeToggle.addEventListener('click', function () {
+    if (document.body.classList.contains('dark-mode')) {
+        disableDarkMode();
+    } else {
+        enableDarkMode();
+    }
+});
+
 
 // Funktion zum Laden der Initialen in das Dropdown-Menü
 function loadInitials() {
