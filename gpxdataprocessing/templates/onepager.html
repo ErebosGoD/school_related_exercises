@@ -6,79 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GPX One Pager</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        /* Stil für den Container */
-        .container {
-            display: flex;
-            flex-direction: row;
-            /* Zeile: Dropdowns nebeneinander ausrichten */
-            justify-content: center;
-            /* In der Mitte horizontal ausrichten */
-            align-items: center;
-            /* In der Mitte vertikal ausrichten */
-            text-align: center;
-            /* Text in der Mitte ausrichten */
-            flex-wrap: wrap;
-            /* Umbruch bei Bedarf */
-        }
-
-        /* Stil für die Dropdown-Menüs */
-        .dropdown-container {
-            display: flex;
-            justify-content: space-evenly;
-            /* Nebeneinander ausrichten */
-            width: 30%;
-            margin-bottom: 20px;
-            /* Abstand zwischen Dropdown-Menüs und Karte */
-            margin-right: 20px;
-            margin-left: 20px;
-        }
-
-        #map-container {
-            width: 80%;
-            /* Breite der Karte anpassen */
-            max-width: 800px;
-            /* Maximale Breite für die Karte festlegen */
-            border: 2px solid #ccc;
-            /* Rahmen um die Karte */
-            border-radius: 10px;
-            /* Abgerundete Ecken für den Rahmen */
-            overflow: hidden;
-            /* Verhindert das Herausragen von Inhalten aus dem Rahmen */
-        }
-
-        /* Dunkler Hintergrund und heller Text für den Dark Mode */
-        body.dark-mode {
-            background-color: #333;
-            color: #fff;
-        }
-
-        /* Umgekehrte Farben für Links im Dark Mode */
-        body.dark-mode a {
-            color: #66c2ff;
-        }
-
-        /* Ändern Sie die Farben der Dropdown-Menüs im Dark Mode */
-        body.dark-mode select {
-            background-color: #444;
-            color: #fff;
-        }
-
-        /* Ändern Sie die Farben der Karte im Dark Mode */
-        body.dark-mode #map-container {
-            border-color: #666;
-        }
-
-        body {
-            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            font-size: 14px;
-            line-height: 1.428571429;
-            color: #333;
-            background-color: #fff;
-        }
-    </style>
 </head>
 
 <body style="margin: 8px;">
@@ -88,106 +18,29 @@
 
     <!-- Container für die Dropdown-Menüs und die Karte -->
     <div class="container">
-        <!-- Dropdown-Menü für Initialen (oben) -->
-        <div class="dropdown-container">
-            <label for="initials_select">Initialen:</label>
-            <select id="initials_select"></select>
+        <div class="menu-container">
+            <!-- Dropdown-Menü für Initialen -->
+            <div class="select">
+                <label for="initials_select">Initialen:</label>
+                <select id="initials_select">
+                    <option value="">Wählen Sie Initialen</option>
+                </select>
+            </div>
+            <!-- Dropdown-Menü für Tracks -->
+            <div class="select">
+                <label for="tracks_select">Tracks:</label>
+                <select id="tracks_select">
+                    <option value="">Wählen Sie einen Track</option>
+                </select>
+            </div>
         </div>
-
-        <!-- Dropdown-Menü für Tracks (oben) -->
-        <div class="dropdown-container">
-            <label for="tracks_select">Tracks:</label>
-            <select id="tracks_select"></select>
-        </div>
-
         <!-- Karte (unten) -->
-        <div id="map-container" style="width: 100%; height: 500px; position: relative;">
-            <div id="map-placeholder" style="width: 100%; height: 100%;"></div>
+        <div class="map-container">
+            {{ map_html|safe }}
         </div>
-
     </div>
+    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
 
-    <!-- Skript für Dropdown-Menüs und Karte -->
-    <script>
-        // JavaScript, um zwischen Dark Mode und Standardmodus umzuschalten
-        function toggleDarkMode() {
-            const body = document.querySelector('body');
-            body.classList.toggle('dark-mode');
-        }
-
-        // Event-Handler für den Dark-Mode-Schalter
-        const darkModeToggle = document.querySelector('#dark-mode-toggle');
-        darkModeToggle.addEventListener('click', toggleDarkMode);
-
-        // Funktion zum Laden der Initialen in das Dropdown-Menü
-        function loadInitials() {
-            $.ajax({
-                url: '/get_initials',
-                method: 'GET',
-                success: function (data) {
-                    var initialsSelect = $('#initials_select');
-                    initialsSelect.empty();
-                    initialsSelect.append($('<option>').val('').text('Wählen Sie Initialen'));
-                    $.each(data, function (index, initials) {
-                        initialsSelect.append($('<option>').val(initials).text(initials));
-                    });
-                }
-            });
-        }
-
-        // Funktion zum Laden der Tracks in das Dropdown-Menü
-        function loadTracks(initials) {
-            $.ajax({
-                url: '/get_tracks/' + initials,
-                method: 'GET',
-                success: function (data) {
-                    var tracksSelect = $('#tracks_select');
-                    tracksSelect.empty();
-                    tracksSelect.append($('<option>').val('').text('Wählen Sie einen Track'));
-                    $.each(data, function (index, trackId) {
-                        tracksSelect.append($('<option>').val(trackId).text('Track ' + trackId));
-                    });
-                }
-            });
-        }
-
-        // Funktion zum Anzeigen eines Tracks auf der Karte
-        function displayTrack(trackId) {
-            if (trackId) {
-                // Wegpunkte für den ausgewählten Track abrufen
-                $.ajax({
-                    url: '/display_track/' + trackId,
-                    method: 'GET',
-                    success: function (mapHtml) {
-                        // Ersetzen Sie den Inhalt des "map-placeholder" <div> mit der Karte
-                        $('#map-placeholder').html(mapHtml);
-                    }
-                });
-            } else {
-                // Wenn kein Track ausgewählt ist, das "map-placeholder" <div> leeren
-                $('#map-placeholder').empty();
-            }
-        }
-
-        // Event-Handler für die Auswahl einer Initialen
-        $('#initials_select').change(function () {
-            var initials = $(this).val();
-            if (initials) {
-                loadTracks(initials);
-                // Beim Ändern der Initialen die Karte leeren
-                displayTrack(null);
-            }
-        });
-
-        // Event-Handler für die Auswahl eines Tracks
-        $('#tracks_select').change(function () {
-            var trackId = $(this).val();
-            displayTrack(trackId);
-        });
-
-        // Initialen beim Laden der Seite laden
-        loadInitials();
-    </script>
 </body>
 
 </html>

@@ -1,9 +1,9 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, url_for
 import sqlite3
 import folium
 from parse_and_persist_data import GpxParser
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static')
 
 DATABASE = 'gpxdataprocessing\gpxdata.db'
 GPX_DIRECTORY = 'gpxdataprocessing\gpxdata'
@@ -11,7 +11,13 @@ GPX_DIRECTORY = 'gpxdataprocessing\gpxdata'
 
 @app.route('/', methods=['GET'])
 def onepager():
-    return render_template('onepager.html')
+    # Karte mit einem Standardstandort und Zoom erstellen
+    m = folium.Map(location=[51.1657, 10.4515], zoom_start=6)
+
+    # Karte in HTML speichern und in die Vorlage einfügen
+    map_html = m.get_root()._repr_html_()
+    return render_template('onepager.html', map_html=map_html)
+
 
 # Neue Route zum Abrufen aller Initialen als JSON
 
@@ -97,12 +103,12 @@ def display_track(track_id):
         m.fit_bounds(bounds)
 
     # Karte in HTML speichern und zurückgeben
-    map_html = m.get_root().render()
+    map_html = m.get_root()._repr_html_()
     return map_html
 
 
 if __name__ == '__main__':
     gpx_parser = GpxParser(DATABASE)
-    gpx_parser.create_tables()
-    gpx_parser.persist_gpx_data(GPX_DIRECTORY)
-    app.run(debug=True)
+    # gpx_parser.create_tables()
+    # gpx_parser.persist_gpx_data(GPX_DIRECTORY)
+    app.run()
