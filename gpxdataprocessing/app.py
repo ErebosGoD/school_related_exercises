@@ -11,15 +11,14 @@ GPX_DIRECTORY = 'gpxdataprocessing\gpxdata'
 
 @app.route('/', methods=['GET'])
 def onepager():
+    gpx_parser.create_tables()
+    gpx_parser.persist_gpx_data(GPX_DIRECTORY)
     # Karte mit einem Standardstandort und Zoom erstellen
     m = folium.Map(location=[51.1657, 10.4515], zoom_start=6)
 
     # Karte in HTML speichern und in die Vorlage einfügen
     map_html = m.get_root()._repr_html_()
     return render_template('onepager.html', map_html=map_html)
-
-
-# Neue Route zum Abrufen aller Initialen als JSON
 
 
 @app.route('/get_initials', methods=['GET'])

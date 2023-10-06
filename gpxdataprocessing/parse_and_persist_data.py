@@ -85,11 +85,26 @@ class GpxParser():
 
                 track_id = self.cursor.lastrowid
 
-                # TODO GPX files with wpt instead of trkpt
-                # insert waypoints
-                for track in gpx.tracks:
-                    for segment in track.segments:
-                        for point in segment.points:
-                            self.cursor.execute('INSERT INTO waypoints (track_id, latitude, longitude, timestamp) VALUES (?, ?, ?, ?)',
-                                                (track_id, point.latitude, point.longitude, str(point.time)))
+                if gpx.tracks:
+                    for track in gpx.tracks:
+                        if track.segments:
+                            # If the track has segments, process them
+                            for segment in track.segments:
+                                for point in segment.points:
+                                    self.cursor.execute('INSERT INTO waypoints (track_id, latitude, longitude, timestamp) VALUES (?, ?, ?, ?)',
+                                                        (track_id, point.latitude, point.longitude, str(point.time)))
+                        else:
+                            print("habe points gefunden")
+                            # If there are no segments, insert individual waypoints within the track
+                            print(gpx.get_points_data())
+                            for point in gpx.get_points_data():
+                                print("Bin jetzt im point drin", point)
+                                self.cursor.execute('INSERT INTO waypoints (track_id, latitude, longitude, timestamp) VALUES (?, ?, ?, ?)',
+                                                    (track_id, point.latitude, point.longitude, str(point.time)))
+                else:
+                    # If there are no tracks, insert individual waypoints
+                    for waypoint in gpx.waypoints:
+                        self.cursor.execute('INSERT INTO waypoints (track_id, latitude, longitude, timestamp) VALUES (?, ?, ?, ?)',
+                                            (track_id, waypoint.latitude, waypoint.longitude, str(waypoint.time)))
+
         self.connection.commit()
