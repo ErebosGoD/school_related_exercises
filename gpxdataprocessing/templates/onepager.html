@@ -12,21 +12,21 @@
 </head>
 
 <body>
-    <!-- Dark Mode-Schalter -->
+    <!-- Dark Mode-Switch -->
     <button id="dark-mode-toggle">Dark Mode</button>
     <h1>GPX One Pager</h1>
 
-    <!-- Container für die Dropdown-Menüs und die Karte -->
+    <!-- Container for dropdown menus and map -->
     <div class="container">
         <div class="menu-container">
-            <!-- Dropdown-Menü für Initialen -->
+            <!-- Dropdown-Menü for initials -->
             <div class="select">
                 <label for="initials_select">Initialen:</label>
                 <select id="initials_select">
                     <option value="">Wählen Sie Initialen</option>
                 </select>
             </div>
-            <!-- Dropdown-Menü für Tracks -->
+            <!-- Dropdown-Menü for tracks -->
             <div class="select">
                 <label for="tracks_select">Tracks:</label>
                 <select id="tracks_select">
@@ -34,7 +34,7 @@
                 </select>
             </div>
         </div>
-        <!-- Karte (unten) -->
+        <!-- container for map -->
         <div class="map-container">
             {{ map_html|safe }}
         </div>

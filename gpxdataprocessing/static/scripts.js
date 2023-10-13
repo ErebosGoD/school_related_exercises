@@ -1,16 +1,16 @@
-// Funktion zum Aktivieren des Dark Mode
+// function to enable darkmode
 function enableDarkMode() {
     const body = document.querySelector('body');
     body.classList.add('dark-mode');
 }
 
-// Funktion zum Deaktivieren des Dark Mode
+// function to disable darkmode
 function disableDarkMode() {
     const body = document.querySelector('body');
     body.classList.remove('dark-mode');
 }
 
-// Event-Handler für den Dark Mode-Button
+// Event-Handler for dark mode button
 const darkModeToggle = document.querySelector('#dark-mode-toggle');
 darkModeToggle.addEventListener('click', function () {
     if (document.body.classList.contains('dark-mode')) {
@@ -21,7 +21,7 @@ darkModeToggle.addEventListener('click', function () {
 });
 
 
-// Funktion zum Laden der Initialen in das Dropdown-Menü
+// function for loading initials
 function loadInitials() {
     $.ajax({
         url: '/get_initials',
@@ -37,7 +37,7 @@ function loadInitials() {
     });
 }
 
-// Funktion zum Laden der Tracks in das Dropdown-Menü
+// function for loading tracks
 function loadTracks(initials) {
     $.ajax({
         url: '/get_tracks/' + initials,
@@ -53,39 +53,38 @@ function loadTracks(initials) {
     });
 }
 
-// Funktion zum Anzeigen eines Tracks auf der Karte
+// function for displaying tracks on map
 function displayTrack(trackId) {
     if (trackId) {
-        // Wegpunkte für den ausgewählten Track abrufen
+        // get waypoints for given track id
         $.ajax({
             url: '/display_track/' + trackId,
             method: 'GET',
             success: function (mapHtml) {
-                // Ersetzen Sie den Inhalt des "map-placeholder" <div> mit der Karte
+                // replace map-container content with rendered map for track
                 $('.map-container').html(mapHtml);
             }
         });
     } else {
-        // Wenn kein Track ausgewählt ist, das "map-placeholder" <div> leeren
+        // if no track available empty container
         $('#map-container').empty();
     }
 }
 
-// Event-Handler für die Auswahl einer Initialen
+// Event-Handler for initials
 $('#initials_select').change(function () {
     var initials = $(this).val();
     if (initials) {
         loadTracks(initials);
-        // Beim Ändern der Initialen die Karte leeren
         displayTrack(null);
     }
 });
 
-// Event-Handler für die Auswahl eines Tracks
+// Event-Handler for track selection
 $('#tracks_select').change(function () {
     var trackId = $(this).val();
     displayTrack(trackId);
 });
 
-// Initialen beim Laden der Seite laden
+// load initials on page startup
 loadInitials();

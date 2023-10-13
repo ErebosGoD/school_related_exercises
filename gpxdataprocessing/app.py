@@ -13,40 +13,37 @@ GPX_DIRECTORY = 'gpxdataprocessing\gpxdata'
 def onepager():
     gpx_parser.create_tables()
     gpx_parser.persist_gpx_data(GPX_DIRECTORY)
-    # Karte mit einem Standardstandort und Zoom erstellen
+    # set default location and zoom
     m = folium.Map(location=[51.1657, 10.4515], zoom_start=6)
 
-    # Karte in HTML speichern und in die Vorlage einfügen
     map_html = m.get_root()._repr_html_()
     return render_template('onepager.html', map_html=map_html)
 
 
 @app.route('/get_initials', methods=['GET'])
 def get_initials():
-    # Verbindung zur SQLite-Datenbank herstellen
+    # create connection to sqlite3 database
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
-    # Abrufen der Initialen aus der Datenbank
+    # get initials from database
     cursor.execute('SELECT DISTINCT initials FROM drivers')
     initials = [row[0] for row in cursor.fetchall()]
 
-    # Verbindung zur Datenbank schließen
+    # close database
     conn.close()
 
-    # Konvertieren Sie die Initialen in JSON und senden Sie sie zurück
+    # return initials as json
     return jsonify(initials)
-
-# Neue Route zum Abrufen der Tracks basierend auf den ausgewählten Initialen als JSON
 
 
 @app.route('/get_tracks/<initials>', methods=['GET'])
 def get_tracks(initials):
-    # Verbindung zur SQLite-Datenbank herstellen
+    # create connection to sqlite3 database
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
-    # Tracks für die ausgewählten Initialen abrufen
+    # get tracks for chosen initials
     cursor.execute('''
         SELECT tracks.track_id
         FROM tracks
@@ -56,22 +53,18 @@ def get_tracks(initials):
 
     track_ids = [row[0] for row in cursor.fetchall()]
 
-    # Verbindung zur Datenbank schließen
     conn.close()
 
-    # Konvertieren Sie die Track-IDs in JSON und senden Sie sie zurück
+    # return track ids as json
     return jsonify(track_ids)
-
-# Neue Route zum Anzeigen eines Tracks basierend auf der ausgewählten Track-ID
 
 
 @app.route('/display_track/<int:track_id>', methods=['GET'])
 def display_track(track_id):
-    # Verbindung zur SQLite-Datenbank herstellen
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
-    # Wegpunkte für den ausgewählten Track abrufen
+    # get latitude and longitude for given track id
     cursor.execute('''
         SELECT latitude, longitude
         FROM waypoints
@@ -80,8 +73,7 @@ def display_track(track_id):
 
     waypoints = cursor.fetchall()
 
-    # Karte erstellen
-    # Leere Karte mit Mittelpunkt Deutschland
+    # create map with default location germany
     m = folium.Map(location=[51.1657, 10.4515], zoom_start=6)
 
     if waypoints:
@@ -91,17 +83,17 @@ def display_track(track_id):
             weight=3,
         ).add_to(m)
 
-        # Berechnen Sie die Grenzen der Karte basierend auf den Wegpunkten
+        # calculate map borders
         latitudes = [wp[0] for wp in waypoints]
         longitudes = [wp[1] for wp in waypoints]
         min_lat, max_lat = min(latitudes), max(latitudes)
         min_lon, max_lon = min(longitudes), max(longitudes)
         bounds = [[min_lat, min_lon], [max_lat, max_lon]]
 
-        # Verwenden Sie die Grenzen, um die Karte anzupassen
+        # fit map to bounds of container
         m.fit_bounds(bounds)
 
-    # Karte in HTML speichern und zurückgeben
+    # return map
     map_html = m.get_root()._repr_html_()
     return map_html
 
