@@ -94,13 +94,17 @@ class GpxParser():
                                     self.cursor.execute('INSERT INTO waypoints (track_id, latitude, longitude, timestamp) VALUES (?, ?, ?, ?)',
                                                         (track_id, point.latitude, point.longitude, str(point.time)))
                         else:
-                            print("habe points gefunden")
+                            # print("habe points gefunden")
                             # If there are no segments, insert individual waypoints within the track
-                            print(gpx.get_points_data())
-                            for point in gpx.get_points_data():
+                            # print(gpx.get_points_data())
+
+                            for point in segment.points:
                                 print("Bin jetzt im point drin", point)
-                                self.cursor.execute('INSERT INTO waypoints (track_id, latitude, longitude, timestamp) VALUES (?, ?, ?, ?)',
-                                                    (track_id, point.latitude, point.longitude, str(point.time)))
+                                if point.latitude is not None and point.longitude is not None:
+                                    self.cursor.execute('INSERT INTO waypoints (track_id, latitude, longitude, timestamp) VALUES (?, ?, ?, ?)',
+                                                        (track_id, point.latitude, point.longitude, str(point.time)))
+                                else:
+                                    print("No latitude or longitude found")
                 else:
                     # If there are no tracks, insert individual waypoints
                     for waypoint in gpx.waypoints:
