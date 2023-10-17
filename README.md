@@ -2,4 +2,6 @@
 
 I will collect all miscellaneous coding projects regarding school here.
 Current projects:
-- Parsing GPX Data
+- Parsing GPX Data (for school)
+- WebWeave (collection of nitbits in a flask webserver)
+
