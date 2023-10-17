@@ -14,25 +14,35 @@
 <body>
     <!-- Dark Mode-Switch -->
     <button id="dark-mode-toggle">Dark Mode</button>
+    <button id="reset-filters">Reset</button>
+
     <h1>GPX One Pager</h1>
 
     <!-- Container for dropdown menus and map -->
     <div class="container">
         <div class="menu-container">
-            <!-- Dropdown-Menü for initials -->
+            <!-- Dropdown-Menu for initials -->
             <div class="select">
                 <label for="initials_select">Initialen:</label>
                 <select id="initials_select">
                     <option value="">Wählen Sie Initialen</option>
                 </select>
             </div>
-            <!-- Dropdown-Menü for tracks -->
+            <!-- Dropdown-Menu for cars -->
             <div class="select">
-                <label for="tracks_select">Tracks:</label>
-                <select id="tracks_select">
-                    <option value="">Wählen Sie einen Track</option>
+                <label for="cars_select">Autos:</label>
+                <select id="cars_select">
+                    <option value="">Wählen Sie ein Auto</option>
                 </select>
             </div>
+            <div class="timeline">
+                <label for="start-date">Startdatum:</label>
+                <input type="date" id="start-date" name="start-date">
+                <label for="end-date">Enddatum:</label>
+                <input type="date" id="end-date" name="end-date">
+                <button id="apply-filters">Anwenden</button>
+            </div>
+
         </div>
         <!-- container for map -->
         <div class="map-container">

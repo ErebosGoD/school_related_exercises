@@ -11,6 +11,13 @@ class GpxParser():
 
     def create_tables(self):
         self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS files (
+                file_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                filename TEXT
+            )
+        ''')
+
+        self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS drivers (
                 driver_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 initials TEXT
@@ -49,66 +56,64 @@ class GpxParser():
         # iterate over gpx files in given directory
         for filename in os.listdir(gpx_directory):
             if filename.endswith('.gpx'):
-                gpx_file_path = os.path.join(gpx_directory, filename)
-
-                # parse gpx file
-                gpx_file = open(gpx_file_path, 'r')
-                gpx = gpxpy.parse(gpx_file)
-
-                # extract initials and license plate from file name
-                initials = filename[:2]
-                license_plate = filename[3:12]
-                if license_plate[-1] == '_':
-                    license_plate = license_plate[:-1]
-
-                # Check if driver already exists
+                # Check if file was already parsed
                 self.cursor.execute(
-                    'SELECT driver_id FROM drivers WHERE initials = ?', (initials,))
-                existing_driver = self.cursor.fetchone()
+                    'SELECT filename FROM files WHERE filename = ?', (filename,))
+                current_file = self.cursor.fetchone()
+                # print(current_file)
 
-                if existing_driver:
-                    # if true use existing driver ID
-                    driver_id = existing_driver[0]
-                else:
-                    # if false, insert as a new driver with a new ID
+                if not current_file:
                     self.cursor.execute(
-                        'INSERT INTO drivers (initials) VALUES (?)', (initials,))
-                    driver_id = self.cursor.lastrowid
+                        'INSERT INTO files (filename) VALUES (?)', (filename,))
 
-                # insert license plates
-                self.cursor.execute(
-                    'INSERT INTO cars (license_plate) VALUES (?)', (license_plate,))
+                    gpx_file_path = os.path.join(gpx_directory, filename)
 
-                # insert tracks
-                self.cursor.execute('INSERT INTO tracks (driver_id, car_id) VALUES (?, (SELECT car_id FROM cars WHERE license_plate = ?))',
-                                    (driver_id, license_plate))
+                    # parse gpx file
+                    gpx_file = open(gpx_file_path, 'r')
+                    gpx = gpxpy.parse(gpx_file)
 
-                track_id = self.cursor.lastrowid
+                    # extract initials and license plate from file name
+                    initials = filename[:2]
+                    license_plate = filename[3:12]
+                    if license_plate[-1] == '_':
+                        license_plate = license_plate[:-1]
 
-                if gpx.tracks:
-                    for track in gpx.tracks:
-                        if track.segments:
-                            # If the track has segments, process them
-                            for segment in track.segments:
-                                for point in segment.points:
-                                    self.cursor.execute('INSERT INTO waypoints (track_id, latitude, longitude, timestamp) VALUES (?, ?, ?, ?)',
-                                                        (track_id, point.latitude, point.longitude, str(point.time)))
-                        else:
-                            # print("habe points gefunden")
-                            # If there are no segments, insert individual waypoints within the track
-                            # print(gpx.get_points_data())
+                    # Check if driver already exists
+                    self.cursor.execute(
+                        'SELECT driver_id FROM drivers WHERE initials = ?', (initials,))
+                    existing_driver = self.cursor.fetchone()
 
-                            for point in segment.points:
-                                print("Bin jetzt im point drin", point)
-                                if point.latitude is not None and point.longitude is not None:
-                                    self.cursor.execute('INSERT INTO waypoints (track_id, latitude, longitude, timestamp) VALUES (?, ?, ?, ?)',
-                                                        (track_id, point.latitude, point.longitude, str(point.time)))
-                                else:
-                                    print("No latitude or longitude found")
-                else:
-                    # If there are no tracks, insert individual waypoints
-                    for waypoint in gpx.waypoints:
-                        self.cursor.execute('INSERT INTO waypoints (track_id, latitude, longitude, timestamp) VALUES (?, ?, ?, ?)',
-                                            (track_id, waypoint.latitude, waypoint.longitude, str(waypoint.time)))
+                    if existing_driver:
+                        # if true use existing driver ID
+                        driver_id = existing_driver[0]
+                    else:
+                        # if false, insert as a new driver with a new ID
+                        self.cursor.execute(
+                            'INSERT INTO drivers (initials) VALUES (?)', (initials,))
+                        driver_id = self.cursor.lastrowid
+
+                    # insert license plates
+                    self.cursor.execute(
+                        'INSERT INTO cars (license_plate) VALUES (?)', (license_plate,))
+
+                    # insert tracks
+                    self.cursor.execute('INSERT INTO tracks (driver_id, car_id) VALUES (?, (SELECT car_id FROM cars WHERE license_plate = ?))',
+                                        (driver_id, license_plate))
+
+                    track_id = self.cursor.lastrowid
+
+                    if gpx.tracks:
+                        for track in gpx.tracks:
+                            if track.segments:
+                                # If the track has segments, process them
+                                for segment in track.segments:
+                                    for point in segment.points:
+                                        self.cursor.execute('INSERT INTO waypoints (track_id, latitude, longitude, timestamp) VALUES (?, ?, ?, ?)',
+                                                            (track_id, point.latitude, point.longitude, str(point.time)))
+                    else:
+                        # If there are no tracks, insert individual waypoints
+                        for waypoint in gpx.waypoints:
+                            self.cursor.execute('INSERT INTO waypoints (track_id, latitude, longitude, timestamp) VALUES (?, ?, ?, ?)',
+                                                (track_id, waypoint.latitude, waypoint.longitude, str(waypoint.time)))
 
         self.connection.commit()

@@ -20,8 +20,9 @@ darkModeToggle.addEventListener('click', function () {
     }
 });
 
+var selectedCar = ""; // Variable, um das ausgewählte Auto zu speichern
 
-// function for loading initials
+// Event-Handler for initials
 function loadInitials() {
     $.ajax({
         url: '/get_initials',
@@ -36,55 +37,95 @@ function loadInitials() {
         }
     });
 }
+// Event-Handler for initials select
+$('#initials_select').change(function () {
+    var initials = $(this).val();
+    if (initials) {
+        loadCars(initials);  // Lade die Autos basierend auf den ausgewählten Initialen
+        displayTrack(null);  // Zeige keinen Track an, wenn Initialen ausgewählt werden
+    }
+});
 
-// function for loading tracks
-function loadTracks(initials) {
+// Funktion zum Laden der Autos basierend auf den ausgewählten Initialen
+function loadCars(initials) {
     $.ajax({
-        url: '/get_tracks/' + initials,
+        url: '/get_cars/' + initials,
         method: 'GET',
         success: function (data) {
-            var tracksSelect = $('#tracks_select');
-            tracksSelect.empty();
-            tracksSelect.append($('<option>').val('').text('Wählen Sie einen Track'));
-            $.each(data, function (index, trackId) {
-                tracksSelect.append($('<option>').val(trackId).text('Track ' + trackId));
+            var carsSelect = $('#cars_select');
+            carsSelect.empty();
+            carsSelect.append($('<option>').val('').text('Wählen Sie ein Auto'));
+            $.each(data, function (index, car) {
+                carsSelect.append($('<option>').val(car).text(car));
             });
         }
     });
 }
 
-// function for displaying tracks on map
-function displayTrack(trackId) {
-    if (trackId) {
-        // get waypoints for given track id
+
+// Event-Handler for cars select
+$('#cars_select').change(function () {
+    selectedCar = $(this).val();
+});
+
+// function for displaying filtered track on map
+function displayFilteredTrack() {
+    var initials = $('#initials_select').val();
+    var startDate = $('#start-date').val();
+    var endDate = $('#end-date').val();
+
+    if (initials && startDate && endDate) {
+        // Check if a car is selected, if not, display an error message
+        if (!selectedCar) {
+            alert('Bitte wählen Sie ein Auto aus.');
+            return;
+        }
+
+        // Display filtered track on the map
         $.ajax({
-            url: '/display_track/' + trackId,
+            url: '/display_track/' + initials + '/' + selectedCar + '/' + startDate + '/' + endDate,
             method: 'GET',
             success: function (mapHtml) {
-                // replace map-container content with rendered map for track
                 $('.map-container').html(mapHtml);
             }
         });
     } else {
-        // if no track available empty container
-        $('#map-container').empty();
+        // Handle error, e.g., show a message to the user
+        alert('Bitte wählen Sie Initialen und geben Sie Start-/Enddaten an.');
     }
 }
 
-// Event-Handler for initials
-$('#initials_select').change(function () {
-    var initials = $(this).val();
-    if (initials) {
-        loadTracks(initials);
-        displayTrack(null);
-    }
+// Event-Handler for the "Anwenden" button
+$('#apply-filters').click(function () {
+    displayFilteredTrack();
 });
 
-// Event-Handler for track selection
-$('#tracks_select').change(function () {
-    var trackId = $(this).val();
-    displayTrack(trackId);
+// Event-Handler für den Reset-Button
+$('#reset-filters').click(function () {
+    // Leere alle Dropdown-Menüs
+    $('#initials_select, #cars_select').val('');
+    $('#start-date, #end-date').val('');
+
+    // Lade die Initialen neu
+    loadInitials();
+
+    // Setze die Karte auf ihre Standardposition zurück
+    var defaultLatLng = [51.1657, 10.4515];
+    var defaultZoom = 6;
+
+    // Aktualisiere die Karte über die Flask-Route
+    $.ajax({
+        url: '/reset_map',
+        method: 'GET',
+        success: function (mapHtml) {
+            $('.map-container').html(mapHtml);
+
+            // Zentriere und setze den Zoom der Karte zurück
+            var map = L.map('map').setView(defaultLatLng, defaultZoom);
+        }
+    });
 });
+
 
 // load initials on page startup
 loadInitials();
