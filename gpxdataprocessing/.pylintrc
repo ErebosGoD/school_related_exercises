@@ -1,0 +1,2 @@
+[MASTER]
+ignore = missing-docstring, used-before-assignment, protected-access
