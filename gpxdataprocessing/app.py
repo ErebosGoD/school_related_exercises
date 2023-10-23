@@ -17,7 +17,7 @@ def onepager():
     gpx_parser.persist_gpx_data(GPX_DIRECTORY)
     # set default location and zoom
     m = folium.Map(location=[51.1657, 10.4515], zoom_start=6)
-
+    # using private method _repr_html_ instead of render_html since the latter overwrites the css of the html body
     map_html = m.get_root()._repr_html_()
     return render_template('onepager.html', map_html=map_html)
 
@@ -116,7 +116,7 @@ def display_filtered_track(initials, car, start_date, end_date):
         # fit map to bounds of container
         m.fit_bounds(bounds)
 
-    # render the map as HTML
+    # using private method _repr_html_ instead of render_html since the latter overwrites the css of the html body
     map_html = m.get_root()._repr_html_()
     return map_html
 
