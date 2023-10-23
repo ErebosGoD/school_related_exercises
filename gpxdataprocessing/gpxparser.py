@@ -69,7 +69,7 @@ class GpxParser():
                     gpx_file_path = os.path.join(gpx_directory, filename)
 
                     # parse gpx file
-                    gpx_file = open(gpx_file_path, 'r')
+                    gpx_file = open(gpx_file_path, 'r', encoding="utf-8")
                     gpx = gpxpy.parse(gpx_file)
 
                     # extract initials and license plate from file name
@@ -115,5 +115,35 @@ class GpxParser():
                         for waypoint in gpx.waypoints:
                             self.cursor.execute('INSERT INTO waypoints (track_id, latitude, longitude, timestamp) VALUES (?, ?, ?, ?)',
                                                 (track_id, waypoint.latitude, waypoint.longitude, str(waypoint.time)))
+                    self.connection.commit()
 
+    def get_initials(self):
+        self.cursor.execute('SELECT DISTINCT initials FROM drivers')
+        initials = [row[0] for row in self.cursor.fetchall()]
         self.connection.commit()
+        return initials
+
+    def get_cars(self, initials):
+        self.cursor.execute('''
+        SELECT DISTINCT cars.license_plate
+        FROM cars
+        INNER JOIN tracks ON cars.car_id = tracks.car_id
+        INNER JOIN drivers ON tracks.driver_id = drivers.driver_id
+        WHERE drivers.initials = ?
+        ''', (initials,))
+
+        cars = [row[0] for row in self.cursor.fetchall()]
+        return cars
+
+    def get_waypoints_for_track(self, initials, car, start_date, end_date):
+        self.cursor.execute('''
+        SELECT latitude, longitude
+        FROM waypoints
+        INNER JOIN tracks ON waypoints.track_id = tracks.track_id
+        INNER JOIN drivers ON tracks.driver_id = drivers.driver_id
+        INNER JOIN cars ON tracks.car_id = cars.car_id
+        WHERE drivers.initials = ? AND cars.license_plate = ? AND timestamp BETWEEN ? AND ?
+        ''', (initials, car, start_date, end_date))
+
+        waypoints = self.cursor.fetchall()
+        return waypoints

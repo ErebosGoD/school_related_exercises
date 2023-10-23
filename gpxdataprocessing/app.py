@@ -1,13 +1,12 @@
-from flask import Flask, render_template, jsonify, url_for
-import sqlite3
 import folium
-from parse_and_persist_data import GpxParser
-from datetime import datetime
+from flask import Flask, render_template, jsonify
+from gpxparser import GpxParser
+
 
 app = Flask(__name__, static_url_path='/static')
 
-DATABASE = 'gpxdataprocessing\gpxdata.db'
-GPX_DIRECTORY = 'gpxdataprocessing\gpxdata'
+DATABASE = r'gpxdataprocessing\gpxdata.db'
+GPX_DIRECTORY = r'gpxdataprocessing\gpxdata'
 
 
 @app.route('/', methods=['GET'])
@@ -23,19 +22,7 @@ def onepager():
 
 @app.route('/get_initials', methods=['GET'])
 def get_initials():
-    # create connection to sqlite3 database
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-
-    # get initials from database
-    cursor.execute('SELECT DISTINCT initials FROM drivers')
-    initials = [row[0] for row in cursor.fetchall()]
-
-    # close database
-    conn.close()
-
-    # return initials as json
-    return jsonify(initials)
+    return jsonify(gpx_parser.get_initials())
 
 
 # @app.route('/get_tracks/<initials>', methods=['GET'])
@@ -101,20 +88,8 @@ def get_initials():
 
 @app.route('/display_track/<initials>/<car>/<start_date>/<end_date>', methods=['GET'])
 def display_filtered_track(initials, car, start_date, end_date):
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-
-    # get latitude and longitude for given track parameters
-    cursor.execute('''
-        SELECT latitude, longitude
-        FROM waypoints
-        INNER JOIN tracks ON waypoints.track_id = tracks.track_id
-        INNER JOIN drivers ON tracks.driver_id = drivers.driver_id
-        INNER JOIN cars ON tracks.car_id = cars.car_id
-        WHERE drivers.initials = ? AND cars.license_plate = ? AND timestamp BETWEEN ? AND ?
-    ''', (initials, car, start_date, end_date))
-
-    waypoints = cursor.fetchall()
+    waypoints = gpx_parser.get_waypoints_for_track(
+        initials, car, start_date, end_date)
 
     # create map with default location germany
     m = folium.Map(location=[51.1657, 10.4515], zoom_start=6)
@@ -144,24 +119,7 @@ def display_filtered_track(initials, car, start_date, end_date):
 
 @app.route('/get_cars/<initials>', methods=['GET'])
 def get_cars(initials):
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-
-    # Get cars for the selected initials
-    cursor.execute('''
-        SELECT DISTINCT cars.license_plate
-        FROM cars
-        INNER JOIN tracks ON cars.car_id = tracks.car_id
-        INNER JOIN drivers ON tracks.driver_id = drivers.driver_id
-        WHERE drivers.initials = ?
-    ''', (initials,))
-
-    cars = [row[0] for row in cursor.fetchall()]
-
-    conn.close()
-
-    # Return cars as JSON
-    return jsonify(cars)
+    return jsonify(gpx_parser.get_cars(initials))
 
 
 @app.route('/reset_map', methods=['GET'])
@@ -174,6 +132,4 @@ def reset_map():
 
 if __name__ == '__main__':
     gpx_parser = GpxParser(DATABASE)
-    # gpx_parser.create_tables()
-    # gpx_parser.persist_gpx_data(GPX_DIRECTORY)
     app.run()
