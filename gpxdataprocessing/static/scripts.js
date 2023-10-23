@@ -30,7 +30,7 @@ function loadInitials() {
         success: function (data) {
             var initialsSelect = $('#initials_select');
             initialsSelect.empty();
-            initialsSelect.append($('<option>').val('').text('Wählen Sie Initialen'));
+            initialsSelect.append($('<option>').val('').text('Choose Initials'));
             $.each(data, function (index, initials) {
                 initialsSelect.append($('<option>').val(initials).text(initials));
             });
@@ -54,7 +54,7 @@ function loadCars(initials) {
         success: function (data) {
             var carsSelect = $('#cars_select');
             carsSelect.empty();
-            carsSelect.append($('<option>').val('').text('Wählen Sie ein Auto'));
+            carsSelect.append($('<option>').val('').text('Choose a car'));
             $.each(data, function (index, car) {
                 carsSelect.append($('<option>').val(car).text(car));
             });
@@ -77,7 +77,7 @@ function displayFilteredTrack() {
     if (initials && startDate && endDate) {
         // Check if a car is selected, if not, display an error message
         if (!selectedCar) {
-            alert('Bitte wählen Sie ein Auto aus.');
+            alert('Please choose a car');
             return;
         }
 
@@ -91,7 +91,7 @@ function displayFilteredTrack() {
         });
     } else {
         // Handle error, e.g., show a message to the user
-        alert('Bitte wählen Sie Initialen und geben Sie Start-/Enddaten an.');
+        alert('Please choose initials and enter start-/enddate');
     }
 }
 
