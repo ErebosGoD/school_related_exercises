@@ -11,7 +11,9 @@ GPX_DIRECTORY = r'gpxdataprocessing\gpxdata'
 
 @app.route('/', methods=['GET'])
 def onepager():
+    # create database tables if they don't exist
     gpx_parser.create_tables()
+    # parse and persist each file in given directory
     gpx_parser.persist_gpx_data(GPX_DIRECTORY)
     # set default location and zoom
     m = folium.Map(location=[51.1657, 10.4515], zoom_start=6)
@@ -24,6 +26,7 @@ def onepager():
 def get_initials():
     return jsonify(gpx_parser.get_initials())
 
+# old routes for display each track for the selected initials
 
 # @app.route('/get_tracks/<initials>', methods=['GET'])
 # def get_tracks(initials):
@@ -85,9 +88,10 @@ def get_initials():
 #     map_html = m.get_root()._repr_html_()
 #     return map_html
 
-
+# display tracks based on initials, car, start date and end date
 @app.route('/display_track/<initials>/<car>/<start_date>/<end_date>', methods=['GET'])
 def display_filtered_track(initials, car, start_date, end_date):
+    # get waypoints for given variables
     waypoints = gpx_parser.get_waypoints_for_track(
         initials, car, start_date, end_date)
 
@@ -116,15 +120,18 @@ def display_filtered_track(initials, car, start_date, end_date):
     map_html = m.get_root()._repr_html_()
     return map_html
 
+# get cars that the driver with the given initials has driven
+
 
 @app.route('/get_cars/<initials>', methods=['GET'])
 def get_cars(initials):
     return jsonify(gpx_parser.get_cars(initials))
 
+# route for resetting the map back to its default position
+
 
 @app.route('/reset_map', methods=['GET'])
 def reset_map():
-    # Erstelle eine leere Karte mit den Standardwerten
     default_map = folium.Map(location=[51.1657, 10.4515], zoom_start=6)
     map_html = default_map.get_root()._repr_html_()
     return map_html

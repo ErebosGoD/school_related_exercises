@@ -12,50 +12,39 @@ body {
     float: right;
 }
 
-/* Stil für den Container */
+/* Style for Container */
 .container {
     display: flex;
     flex-direction: column;
-    /* Zeile: Dropdowns nebeneinander ausrichten */
     justify-content: center;
-    /* In der Mitte horizontal ausrichten */
     align-items: center;
-    /* In der Mitte vertikal ausrichten */
     text-align: center;
-    /* Text in der Mitte ausrichten */
     flex-wrap: wrap;
-    /* Umbruch bei Bedarf */
-
 }
 
-/* Stil für die Dropdown-Menüs */
+/* Style for Dropdown-Menus */
 .dropdown-container {
     display: flex;
     justify-content: space-evenly;
-    /* Nebeneinander ausrichten */
     width: 30%;
     min-width: 165px;
     margin-bottom: 20px;
-    /* Abstand zwischen Dropdown-Menüs und Karte */
     margin-right: 20px;
     margin-left: 20px;
 }
 
+/* Style for Map-Container */
 .map-container {
     width: 80%;
     height: 50%;
-    /* Breite der Karte anpassen */
     max-width: 900px;
-    /* Maximale Breite für die Karte festlegen */
     border: 2px solid #ccc;
-    /* Rahmen um die Karte */
     border-radius: 10px;
-    /* Abgerundete Ecken für den Rahmen */
     overflow: hidden;
-    /* Verhindert das Herausragen von Inhalten aus dem Rahmen */
     position: relative;
 }
 
+/* Style for Menu-Container */
 .menu-container {
     display: flex;
     flex-direction: row;
@@ -68,24 +57,20 @@ body {
     float: left;
 }
 
-/* Dunkler Hintergrund und heller Text für den Dark Mode */
 body.dark-mode {
     background-color: #333;
     color: #fff;
 }
 
-/* Umgekehrte Farben für Links im Dark Mode */
 body.dark-mode a {
     color: #66c2ff;
 }
 
-/* Ändern Sie die Farben der Dropdown-Menüs im Dark Mode */
 body.dark-mode select {
     background-color: #444;
     color: #fff;
 }
 
-/* Ändern Sie die Farben der Karte im Dark Mode */
 body.dark-mode #map-container {
     border-color: #666;
 }

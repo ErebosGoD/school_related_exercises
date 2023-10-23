@@ -20,7 +20,7 @@ darkModeToggle.addEventListener('click', function () {
     }
 });
 
-var selectedCar = ""; // Variable, um das ausgewählte Auto zu speichern
+var selectedCar = "";
 
 // Event-Handler for initials
 function loadInitials() {
@@ -41,12 +41,12 @@ function loadInitials() {
 $('#initials_select').change(function () {
     var initials = $(this).val();
     if (initials) {
-        loadCars(initials);  // Lade die Autos basierend auf den ausgewählten Initialen
-        displayTrack(null);  // Zeige keinen Track an, wenn Initialen ausgewählt werden
+        loadCars(initials);  // load cars based on selected initials
+        displayTrack(null);  // don't display track just yet, even if initials are selected
     }
 });
 
-// Funktion zum Laden der Autos basierend auf den ausgewählten Initialen
+// Function for loading cars based on selected initials
 function loadCars(initials) {
     $.ajax({
         url: '/get_cars/' + initials,
@@ -100,28 +100,21 @@ $('#apply-filters').click(function () {
     displayFilteredTrack();
 });
 
-// Event-Handler für den Reset-Button
+// Event-Handler for the Reset-Button
 $('#reset-filters').click(function () {
-    // Leere alle Dropdown-Menüs
+    // Clear all Dropdown-Menus
     $('#initials_select, #cars_select').val('');
     $('#start-date, #end-date').val('');
 
-    // Lade die Initialen neu
+    // Load initials again
     loadInitials();
 
-    // Setze die Karte auf ihre Standardposition zurück
-    var defaultLatLng = [51.1657, 10.4515];
-    var defaultZoom = 6;
-
-    // Aktualisiere die Karte über die Flask-Route
+    // Update map through
     $.ajax({
         url: '/reset_map',
         method: 'GET',
         success: function (mapHtml) {
             $('.map-container').html(mapHtml);
-
-            // Zentriere und setze den Zoom der Karte zurück
-            var map = L.map('map').setView(defaultLatLng, defaultZoom);
         }
     });
 });
