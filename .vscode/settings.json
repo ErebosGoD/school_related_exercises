@@ -5,5 +5,7 @@
     "python.formatting.provider": "none",
     "pylint.args": [
         "\"--rcfile=gpxdataprocessing\\.pylintrc\""
-    ]
+    ],
+    "editor.defaultFoldingRangeProvider": "ms-python.autopep8",
+    "editor.defaultFormatter": "ms-python.autopep8"
 }
