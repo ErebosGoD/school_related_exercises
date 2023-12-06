@@ -5,7 +5,7 @@ class PageRank:
 
     def initialize_page_ranks(self):
         for page in self.links.keys():
-            self.page_ranks[page] = 4.0
+            self.page_ranks[page] = 1.0
 
     def calculate_page_ranks(self, damping_factor=0.85, iterations=10):
         for _ in range(iterations):
